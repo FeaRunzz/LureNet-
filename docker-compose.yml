@@ -28,3 +28,15 @@ services:
       - elasticsearch
     networks:
       - lurenet-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    container_name: lurenet-logstash
+    volumes:
+      - ./elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "8080:8080"
+    depends_on:
+      - elasticsearch
+    networks:
+      - lurenet-network
