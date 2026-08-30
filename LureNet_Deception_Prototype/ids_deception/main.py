@@ -3,6 +3,8 @@ import time
 from alert_manager import raise_alert, Severity
 from honeypot import FakeSSHHoneypot, FakeAdminPanel
 from honeytoken_monitor import deploy_honeytokens, HoneytokenMonitor
+from generate_decoys import deploy_all_document_decoys
+
 
 SSH_PORT = 2222
 HTTP_PORT = 8080
@@ -15,6 +17,7 @@ def main():
 
     # 1. Siapkan honeytoken (file umpan)
     deploy_honeytokens()
+    deploy_all_document_decoys()
     token_monitor = HoneytokenMonitor()
     token_monitor.start()
 

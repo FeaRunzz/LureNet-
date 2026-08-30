@@ -18,7 +18,7 @@ DB_PASSWORD=SuperS3cretBackupPass!
 
 
 def deploy_honeytokens():
-    """Buat folder + file umpan. Dipanggil sekali saat sistem start."""
+
     os.makedirs(HONEYTOKEN_DIR, exist_ok=True)
     path = os.path.join(HONEYTOKEN_DIR, "aws_credentials.txt")
     with open(path, "w") as f:
@@ -27,12 +27,22 @@ def deploy_honeytokens():
     return path
 
 
+def _classify_decoy(path):
+    name = os.path.basename(path).lower()
+    if name.endswith(".db"):
+        return "database"
+    if "credential" in name:
+        return "credential"
+    return "document"
+
+
 class _HoneytokenEventHandler(FileSystemEventHandler):
     def _alert(self, event_type, path):
+        decoy_type = _classify_decoy(path)
         raise_alert(
-            source="honeytoken",
+            source=f"honeytoken-{decoy_type}",
             event_type=event_type,
-            detail=f"File umpan disentuh: {path}",
+            detail=f"File umpan ({decoy_type}) disentuh: {path}",
             severity=Severity.CRITICAL,
         )
 
@@ -50,7 +60,6 @@ class _HoneytokenEventHandler(FileSystemEventHandler):
 
 
 class HoneytokenMonitor:
-    """Wrapper untuk start/stop observer watchdog di folder honeytoken."""
 
     def __init__(self, watch_dir=HONEYTOKEN_DIR):
         self.watch_dir = watch_dir
@@ -69,7 +78,11 @@ class HoneytokenMonitor:
 
 
 if __name__ == "__main__":
+    from generate_decoys import deploy_all_document_decoys
+
     deploy_honeytokens()
+    deploy_all_document_decoys()
+
     monitor = HoneytokenMonitor()
     monitor.start()
     try:

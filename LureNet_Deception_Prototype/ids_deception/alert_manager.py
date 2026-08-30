@@ -24,6 +24,11 @@ LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, "alerts.log")
 
+# Format timestamp dengan presisi milidetik -- penting supaya metrik
+# time-to-detection di simulate_attack.py bisa dihitung akurat (sebelumnya
+# cuma presisi detik, jadi banyak event yang keliatan "0 detik" padahal beda).
+TS_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
+
 # Logger file (plain text, tanpa warna, biar gampang diparse/dianalisis)
 _file_logger = logging.getLogger("ids_deception.alerts")
 _file_logger.setLevel(logging.INFO)
@@ -39,13 +44,13 @@ def raise_alert(source: str, event_type: str, detail: str,
     """
     Catat satu alert intrusion/deception.
 
-    source     : nama sensor yang mendeteksi, misal "honeypot-ssh", "honeytoken"
+    source     : nama sensor yang mendeteksi, misal "honeypot-ssh", "honeytoken-document"
     event_type : jenis kejadian, misal "CONNECTION", "LOGIN_ATTEMPT", "FILE_ACCESS"
     detail     : deskripsi bebas (username yang dicoba, path file, dll)
     severity   : level keparahan (enum Severity)
     src_ip     : IP sumber kalau relevan (None kalau tidak ada, misal file access lokal)
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now().strftime(TS_FORMAT)[:-3]  # potong ke milidetik
     ip_part = f" | src={src_ip}" if src_ip else ""
     line = f"[{timestamp}] [{severity.value}] [{source}] {event_type}{ip_part} -> {detail}"
 
